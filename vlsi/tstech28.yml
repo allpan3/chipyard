@@ -1,0 +1,72 @@
+# Technology Setup
+vlsi.core.technology: "hammer.tstech28"
+
+# SRAM Compiler compiler options
+vlsi.core.sram_generator_tool: "hammer.tstech28.sram_compiler"
+# You should specify a location for the SRAM generator in the tech plugin
+# vlsi.core.sram_generator_tool_path: ["hammer-tstech28-plugin"]
+# vlsi.core.sram_generator_tool_path_meta: "append"
+
+technology.tstech28.sram_macros: "./tstech28_sram_macros"
+
+# General Hammer Inputs Related to the Design and Build System
+
+# Generate Make include to aid in flow
+vlsi.core.build_system: make
+vlsi.core.max_threads: 12
+
+# Hammer will auto-generate a CPF for simple power designs; see hammer/src/hammer-vlsi/defaults.yml for more info
+vlsi.inputs.power_spec_mode: "auto"
+vlsi.inputs.power_spec_type: "cpf"
+
+# Specify clock signals
+vlsi.inputs.clocks: [
+  {name: "clock_clock", period: "2ns", uncertainty: "0.1ns"}
+]
+
+# Specify pin properties
+# Default pin placement can be set by the tool
+# Default pin layer assignments can be found in some tech plug-ins
+vlsi.inputs.pin_mode: generated
+vlsi.inputs.pin.generate_mode: semi_auto
+
+# Specify the floorplan
+# Default floor plan can be set by the tool
+# The path name should match the VLSI_TOP makefile parameter if it is set
+
+par.innovus.floorplan_mode: "auto"
+vlsi.inputs.placement_constraints:
+  - path: "ChipTop"
+    type: toplevel
+    x: 0
+    y: 0
+    width: 300
+    height: 300
+    margins:
+      left: 0
+      right: 0
+      top: 0
+      bottom: 0
+
+sim.inputs.tb_name: "TestDriver"
+
+# vlsi.inputs.mmmc_corners: [
+#   {
+#     "name": "ss0p81v125c",
+#     "type": "setup",
+#     "voltage": "0.81 V",
+#     "temp": "125 C"
+#   },
+#   {
+#     "name": "ff0p99v0c",
+#     "type": "hold",
+#     "voltage": "0.99 V",
+#     "temp": "0 C"
+#   },
+#     {
+#     "name": "tt0p9v25c",
+#     "type": "extra",
+#     "voltage": "0.90 V",
+#     "temp": "25 C"
+#   }
+# ]
