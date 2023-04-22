@@ -8,7 +8,6 @@ vlsi.core.sram_generator_tool: "hammer.tstech28.sram_compiler"
 # vlsi.core.sram_generator_tool_path_meta: "append"
 
 technology.tstech28.sram_macros: "./tstech28_sram_macros"
-
 # General Hammer Inputs Related to the Design and Build System
 
 # Generate Make include to aid in flow
