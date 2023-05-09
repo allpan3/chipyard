@@ -8,6 +8,7 @@ import freechips.rocketchip.diplomacy._
 
 import hwacha.{Hwacha}
 import gemmini._
+import hpu._
 
 import chipyard.{TestSuitesKey, TestSuiteHelper}
 
@@ -85,3 +86,18 @@ class WithMultiRoCCGemmini[T <: Data : Arithmetic, U <: Data, V <: Data](
     }))
   }
 })
+
+
+class WithMultiRoCCHPU(harts: Int*)(
+  hpuConfig: HPUConfig = HPUConfigs.defaultConfig
+) extends Config((site, here, up) => {
+  case MultiRoCCKey => {
+    up(MultiRoCCKey, site) ++ harts.distinct.map { i =>
+      (i -> Seq((p: Parameters) => {
+        val hpu = LazyModule(new HPUAccel(hpuConfig)(p))
+        hpu
+      }))
+    }
+  }
+})
+

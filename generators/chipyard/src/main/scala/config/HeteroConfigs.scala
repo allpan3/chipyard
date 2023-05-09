@@ -62,3 +62,11 @@ class LargeBoomAndRocketWithControlCoreConfig extends Config(
   new freechips.rocketchip.subsystem.WithNBigCores(1) ++   // add 1 rocket core
   new chipyard.config.WithSystemBusWidth(128) ++
   new chipyard.config.AbstractConfig)
+
+class HPUGemminiRocketConfig extends Config(
+  new chipyard.config.WithMultiRoCC ++                                  // support heterogeneous rocc
+  new chipyard.config.WithMultiRoCCHPU(0)() ++                          // put hpu on hart-1
+  new chipyard.config.WithMultiRoCCGemmini(1)() ++                      // put gemmini on hart-0
+  new freechips.rocketchip.subsystem.WithNBigCores(2) ++                // add 2 rocket core
+  new chipyard.config.WithSystemBusWidth(128) ++
+  new chipyard.config.AbstractConfig)
