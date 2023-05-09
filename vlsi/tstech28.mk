@@ -2,10 +2,9 @@ design    ?= default
 ENV_YML   ?= $(vlsi_dir)/env-bwrc.yml
 TECH_CONF ?= tstech28.yml
 # Include the srams used in Verilog source code
-HAMMER_EXTRA_ARGS += -p $(vlsi_dir)/tstech28_sram_macros/sram_generator-output.yml
+HAMMER_EXTRA_ARGS += -p $(vlsi_dir)/tstech28_sram_macros/sram_generator-output.json
 
-GENERATED_CONFS += $(GENERATED_CONFS)
-
+CLOCK_PERIOD = 2.0
 USE_SRAM_COMPILER ?= 1
 
 ifeq ($(design),default)
