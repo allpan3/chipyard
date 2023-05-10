@@ -130,3 +130,6 @@
 [submodule "generators/bar-fetchers"]
 	path = generators/bar-fetchers
 	url = https://github.com/ucb-bar/bar-fetchers.git
+[submodule "generators/hpu"]
+	path = generators/hpu
+	url = https://github.com/mohamed-s-ibrahim/HighFive.git

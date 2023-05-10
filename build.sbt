@@ -152,7 +152,7 @@ lazy val chipyard = (project in file("generators/chipyard"))
   .dependsOn(testchipip, rocketchip, boom, hwacha, sifive_blocks, sifive_cache, iocell,
     sha3, // On separate line to allow for cleaner tutorial-setup patches
     dsptools, `rocket-dsp-utils`,
-    gemmini, icenet, tracegen, cva6, nvdla, sodor, ibex, fft_generator,
+    gemmini, icenet, tracegen, cva6, nvdla, sodor, ibex, fft_generator, hpu,
     constellation, mempress, barf, shuttle)
   .settings(libraryDependencies ++= rocketLibDeps.value)
   .settings(
@@ -239,6 +239,12 @@ lazy val nvdla = (project in file("generators/nvdla"))
   .dependsOn(rocketchip)
   .settings(libraryDependencies ++= rocketLibDeps.value)
   .settings(commonSettings)
+
+lazy val hpu = (project in file("generators/hpu"))
+  .dependsOn(rocketchip)
+  .settings(libraryDependencies ++= rocketLibDeps.value)
+  .settings(commonSettings)
+
 
 lazy val iocell = Project(id = "iocell", base = file("./tools/barstools/") / "src")
   .settings(
