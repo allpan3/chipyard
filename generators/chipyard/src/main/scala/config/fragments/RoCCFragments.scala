@@ -94,7 +94,7 @@ class WithMultiRoCCHPU(harts: Int*)(
   case MultiRoCCKey => {
     up(MultiRoCCKey, site) ++ harts.distinct.map { i =>
       (i -> Seq((p: Parameters) => {
-        val hpu = LazyModule(new HPUAccel(hpuConfig)(p))
+        val hpu = LazyModule(new HPU(hpuConfig)(p))
         hpu
       }))
     }
