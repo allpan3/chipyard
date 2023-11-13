@@ -10,6 +10,10 @@ vlsi.core.sram_generator_tool: "hammer.tstech28.sram_compiler"
 technology.tstech28.sram_macros: "./tstech28_sram_macros"
 # General Hammer Inputs Related to the Design and Build System
 
+# Genus tends to use scan cells even though dft is not enabled. Both SE and SI are tied to input D signal, causing timing violation.
+vlsi.inputs.dont_use_mode: "append"
+vlsi.inputs.dont_use_list: ["SDF*", "SEDF*"]
+
 # Generate Make include to aid in flow
 vlsi.core.build_system: make
 vlsi.core.max_threads: 12
@@ -20,8 +24,11 @@ vlsi.inputs.power_spec_type: "cpf"
 
 # Specify clock signals
 vlsi.inputs.clocks: [
-  {name: "clock_clock", period: "2ns", uncertainty: "0.1ns"}
+  {name: "clock_uncore_clock", period: "2ns", uncertainty: "0.1ns"}
 ]
+
+synthesis.inputs:
+  retime_modules: ["Mesh", "Mesh_*", "PE*", "AccumulatorScale*", "VectorScalarMultiplier*", "AccScalePipe*", "AccPipe*",  "ScalePipe*", "Transposer*"]
 
 # Specify pin properties
 # Default pin placement can be set by the tool
