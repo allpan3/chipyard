@@ -13,14 +13,14 @@ synopsys.SNPSLMD_LICENSE_FILE: "1701@bwrcflex-1.eecs.berkeley.edu:1701@bwrcflex-
 synopsys.MGLS_LICENSE_FILE: "1717@bwrcflex-1.eecs.berkeley.edu:1717@bwrcflex-2.eecs.berkeley.edu"
 
 
-vlsi.submit:
-  command: "lsf"
-  settings: [{
-    "lsf": {
-      "bsub_binary": "/tools/support/lsf/9.1/linux2.6-glibc2.3-x86_64/bin/bsub",
-      "num_cpus": 1,
-      "queue": "bora7",
-      "extra_args": []
-    }
-  }]
-  settings_meta: "append"
+# vlsi.submit:
+#   command: "lsf"
+#   settings: [{
+#     "lsf": {
+#       "bsub_binary": "/tools/support/lsf/9.1/linux2.6-glibc2.3-x86_64/bin/bsub",
+#       "num_cpus": 1,
+#       "queue": "bora7",
+#       "extra_args": []
+#     }
+#   }]
+#   settings_meta: "append"

@@ -38,7 +38,9 @@ set_db route_design_top_routing_layer 7
 def syn_ungroup(x: HammerTool) -> bool:
     x.append('''
 # Ungroup VSM module in Gemmini to allow retiming to take effect
-ungroup -verbose [get_db hinsts system/tile_prci_domain/tile_reset_domain_tile/gemmini/spad/*muladder*]
+if {[get_db hinsts system/tile_prci_domain/tile_reset_domain_tile/gemmini/spad/*muladder*] != ""} {
+    ungroup -verbose [get_db hinsts system/tile_prci_domain/tile_reset_domain_tile/gemmini/spad/*muladder*]
+}
 ''')
     return True
 
