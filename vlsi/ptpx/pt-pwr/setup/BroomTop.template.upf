@@ -1,0 +1,95 @@
+#####################################################################
+# TOP - there has to be one top power domain 
+#####################################################################
+create_power_domain PD_TOP -include_scope 
+create_supply_port AVDD    -domain PD_TOP
+create_supply_port VDD -domain PD_TOP 
+create_supply_port VDDPST -domain PD_TOP 
+create_supply_port VDDCORE     -domain PD_TOP
+create_supply_port VSS      -domain PD_TOP 
+
+create_supply_net  AVDD    -domain PD_TOP
+create_supply_net  VDD -domain PD_TOP
+create_supply_net  VDDPST -domain PD_TOP
+create_supply_net  VDDCORE     -domain PD_TOP
+create_supply_net  VSS      -domain PD_TOP
+
+connect_supply_net AVDD -ports { AVDD  }
+connect_supply_net VDD -ports { VDD }
+connect_supply_net VDDPST -ports { VDDPST }
+connect_supply_net VDDCORE     -ports { VDDCORE }
+connect_supply_net VSS      -ports { VSS }
+
+set_domain_supply_net PD_TOP -primary_power_net VDD -primary_ground_net VSS
+
+#####################################################################
+# BOOM Core
+#####################################################################
+create_power_domain PD_CORE -element {
+}
+
+# Punch through top level nets that are also used in the core
+create_supply_net VDDCORE -domain PD_CORE -reuse
+create_supply_net VSS -domain PD_CORE -reuse
+set_domain_supply_net PD_CORE -primary_power_net VDDCORE -primary_ground_net VSS
+
+######################################################################
+## L2
+######################################################################
+#create_power_domain PD_L2 -element {
+#}
+#
+##Punch through top level nets that are also used in L2
+#create_supply_net VDDSRAM -domain PD_L2 -reuse
+#create_supply_net VDDCORE -domain PD_L2 -reuse
+#create_supply_net VSS -domain PD_L2 -reuse
+#set_domain_supply_net PD_L2 -primary_power_net VDDSRAM -primary_ground_net VSS
+
+######################################################################
+## Level Shifters
+######################################################################
+## Library only includes shifters which reside in the destination domain
+## HL (high to low) level shifters are just inverters in the low
+## voltage domain, so the high
+## domain does NOT need to be routed in the low voltage domain
+## LH (low to high) is a double height cell in the high voltage
+## domain, and the low voltage DOES need to be routed in this domain
+set_level_shifter core_lvlshft    -domain PD_CORE   
+set_level_shifter uncore_lvlshft  -domain PD_TOP
+#set_level_shifter l2_lvlshft      -domain PD_L2
+
+#set_level_shifter core_lvlshft_hl -domain PD_CORE -location self -applies_to inputs -rule low_to_high -no_shift
+#set_level_shifter bist_lvlshft_hl  -domain PD_BIST -location self -applies_to inputs -rule low_to_high -no_shift
+#set_level_shifter uncore_lvlshft_hl  -domain PD_TOP -location self -applies_to inputs -rule low_to_high -no_shift
+
+#####################################################################
+# Power States
+#####################################################################
+# can specify state as range of voltages using -state {<name> <min_voltage> <typ_voltage> <max_voltage>}
+add_port_state VDD -state {v0p81  0.81} -state {v0p99 0.99} -state {v0p9 0.9} -state {v1p05 1.05} -state {v1p0 1.0}
+add_port_state AVDD -state {v0p81  0.81} -state {v0p99 0.99} -state {v0p9 0.9} -state {v1p05 1.05} -state {v1p0 1.0}
+add_port_state VDDPST -state {stable18  1.62}
+# can't add VDDCORE state below 0.55 because level shifter libraries not characterized below 0.55
+add_port_state VDDCORE -state {v0p81  0.81} -state {v0p99 0.99} -state {v0p9 0.9} -state {v1p05 1.05} -state {v1p0 1.0} -state {v0p88 0.88} -state {v0p72 0.72} -state {v0p8 0.8}
+add_port_state VSS      -state {ground  0.0}
+
+# pst = power state table
+create_pst TOP_pst -supplies { VDD VDDPST AVDD VDDCORE VSS}
+
+# don't need more than 2 states, just need 2 to insert level shifters
+#add_pst_state SV_FF -pst TOP_pst -state { v0p99 stable18 v0p99 v0p99 ground v0p99}
+#add_pst_state SV_SS -pst TOP_pst -state { v0p81 stable18 v0p81 v0p81 ground v0p81}
+#add_pst_state SV_TT -pst TOP_pst -state { v0p9 stable18 v0p9 v0p9 ground v0p9}
+#add_pst_state MV_FF -pst TOP_pst -state { v1p05 stable18 v1p05 v0p88 ground v0p88}
+#add_pst_state MV_SS -pst TOP_pst -state { v0p9 stable18 v0p9 v0p72 ground v0p72}
+#add_pst_state MV_TT -pst TOP_pst -state { v1p0 stable18 v1p0 v0p8 ground v0p8}
+#add_pst_state MV_DC -pst TOP_pst -state { v0p9 stable18 v0p9 v0p81 ground v0p81}
+add_pst_state L2_LOW -pst TOP_pst -state { v0p9 stable18 v0p9 v0p9 ground}
+add_pst_state CORE_LOW -pst TOP_pst -state { v0p9 stable18 v0p9 v0p81 ground}
+add_pst_state SETUP -pst TOP_pst -state { v0p81 stable18 v0p81 v0p81 ground}
+add_pst_state HOLD -pst TOP_pst -state { v0p99 stable18 v0p99 v0p99 ground}
+add_pst_state POWER -pst TOP_pst -state { v0p9 stable18 v0p9 v0p9 ground}
+
+# may help with level shifter debugging
+set mv_insert_level_shifter_verbose true
+

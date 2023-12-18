@@ -1,0 +1,148 @@
+#########################################################################################
+# Path Variables
+#########################################################################################
+
+ifndef PT_SETUP_HOME
+$(error PT_SETUP_HOME is unset. Did you source the project's sourceme?)
+else
+$(info Running with PT_SETUP_HOME=$(PT_SETUP_HOME))
+endif
+
+mkfile_path := $(abspath $(lastword $(MAKEFILE_LIST)))
+mkfile_dir  := $(dir $(mkfile_path))
+include $(mkfile_dir)/tstech28.mk
+
+syn_dir 		 = $(OBJ_DIR)/syn-rundir
+
+sim_dir          = $(OBJ_DIR)/sim-syn-rundir
+# sim_dir 		 = $(sim_rtl_dir)
+saif_dir         = $(sim_dir)/$(binary_file)
+
+dc_sdc  		 = $(syn_dir)/$(pt_toplevel).mapped.pwr.sdc
+dc_v    		 = $(syn_dir)/$(pt_toplevel).mapped.v
+
+pt_exec 		 = pt_shell
+
+pt_cur_build_dir = $(OBJ_DIR)/power-rundir
+pt_timestamp     = $(pt_cur_build_dir)/timestamp
+pt_reports_dir 	 = $(pt_cur_build_dir)/reports
+pt_results_dir 	 = $(pt_cur_build_dir)/results
+
+pt_dir 			 = $(PT_SETUP_HOME)
+pt_setup_dir 	 = $(pt_dir)/setup
+pt_scripts_dir 	 = $(pt_dir)/pt_scripts
+
+pt_vars_tcl      = $(pt_setup_dir)/common_setup.tcl $(pt_setup_dir)/pt_setup.tcl
+pt_avg_tcl  	 = $(pt_scripts_dir)/pt.avg.tcl
+pt_time_tcl 	 = $(pt_scripts_dir)/pt.time.tcl
+
+
+#########################################################################################
+# PT Rules
+#########################################################################################
+
+pt_toplevel      ?= ChipTop
+pt_toplevel_tb   ?= TestDriver
+pt_toplevel_inst ?= chiptop
+
+#########################################################################################
+# Generated Files
+#########################################################################################
+
+pt_makegen_tcl  = $(pt_cur_build_dir)/make_generated_vars.tcl
+pt_avg_min_rpt  = $(addprefix $(pt_reports_dir)/, $(addsuffix .power.avg.min.report, $(pt_toplevel)))
+pt_avg_max_rpt  = $(addprefix $(pt_reports_dir)/, $(addsuffix .power.avg.max.report, $(pt_toplevel)))
+pt_time_min_rpt = $(addprefix $(pt_reports_dir)/, $(addsuffix .power.time.min.report, $(pt_toplevel)))
+pt_time_max_rpt = $(addprefix $(pt_reports_dir)/, $(addsuffix .power.time.max.report, $(pt_toplevel)))
+
+pt_vars = \
+	set DESIGN_NAME                 "$(pt_toplevel)";\n \
+	set ADDITIONAL_SEARCH_PATH      "$(io_db_dir) $(cells_ccs_db_dir) $(srams_db_dir) $(syn_dir)/";\n \
+	set MW_REFERENCE_LIB_DIRS       "$(cells_mw_dir) $(srams_mw_dir) $(io_mw_dir)";\n \
+	set MIN_LIBRARY_FILES           "$(min_library)";\n \
+	set REPORTS_DIR                 "$(pt_reports_dir)";\n \
+	set RESULTS_DIR                 "$(pt_results_dir)";\n \
+	set NETLIST_FILES               "$(notdir $(dc_v))";\n \
+	set CONSTRAINT_FILES            "$(dc_sdc)";\n \
+
+pt_vars_avg = \
+	set STRIP_PATH                  "$(pt_toplevel_tb)/testHarness/$(pt_toplevel_inst)";\n \
+	set PT_METHOD                   "avg";\n \
+
+pt_vars_time = \
+	set STRIP_PATH                  "$(pt_toplevel_tb)/testHarness/$(pt_toplevel_inst)";\n \
+	set PT_METHOD                   "time";\n \
+
+pt_vars_min = \
+	set TARGET_LIBRARY_FILES        "$(cells_db) $(srams_db)";\n \
+	set SRAM_LIBRARY_FILES          "$(srams_db)";\n \
+	set PARASITIC_PATHS             "$(pt_toplevel)";\n \
+	set PARASITIC_FILES             "$(dc_sbpf_min)";\n \
+	set PT_PARASITIC                "min";\n \
+
+pt_vars_max = \
+	set TARGET_LIBRARY_FILES        "$(cells_ccs_tt_db) $(srams_tt_db) $(clkrx_ttdb) $(io_tt_db)";\n \
+	set SRAM_LIBRARY_FILES          "$(srams_tt_db)";\n \
+	set PARASITIC_PATHS             "$(pt_toplevel)";\n \
+	set PARASITIC_FILES             "$(dc_spef)";\n \
+	set PT_PARASITIC                "max";\n \
+
+
+#########################################################################################
+# Auto Build Rules
+#########################################################################################
+
+# Write timestamp
+$(pt_timestamp):
+	mkdir -p $(pt_cur_build_dir)
+	date > $(pt_timestamp)
+
+# # VPD to VCD
+# %.vcd: %.vpd
+# 	vpd2vcd $(basename $@).vpd $(basename $@).vcd
+
+# # VCD to SAIF
+# %.saif:
+# 	vpd2vcd $(OUT_DIR)/$(vcd_name).vpd $(OUT_DIR)/$(vcd_name).vcd
+# 	vcd2saif -input $(OUT_DIR)/$(vcd_name).vcd -output $(OUT_DIR)/$(vcd_name).saif
+
+%.vcd: %.vpd
+	vpd2vcd $(basename $@).vpd $(basename $@).vcd
+
+%.saif:
+	if [ -f $(saif_dir)/ucli.saif ]; then \
+		mv $(saif_dir)/ucli.saif $(saif_dir)/$(vcd_name).saif ; \
+	else \
+		vpd2vcd $(OUT_DIR)/$(vcd_name).vpd $(OUT_DIR)/$(vcd_name).vcd ; \
+		vcd2saif -input $(OUT_DIR)/$(vcd_name).vcd -output $@ ; \
+	fi
+
+# PT Average Mode Report (Averaged mode uses .saif file)
+$(pt_avg_max_rpt): $(saif_dir)/$(vcd_name).saif $(pt_timestamp) 
+	cp $(pt_avg_tcl) $(pt_vars_tcl) $(pt_cur_build_dir)
+	echo -e '$(pt_vars)' > $(pt_makegen_tcl)
+	echo -e '$(pt_vars_avg)' >> $(pt_makegen_tcl)
+	echo -e '$(pt_vars_max)' >> $(pt_makegen_tcl)
+	echo -e 'set ACTIVITY_FILE "$<";\n' >> $(pt_makegen_tcl)
+	echo -e 'set PT_EXEC "$(notdir $(patsubst %.saif, %, $(saif_dir)/$(vcd_name).saif))";\n' >> $(pt_makegen_tcl)
+	cd $(pt_cur_build_dir); \
+	$(pt_exec) -f $(notdir $(pt_avg_tcl)) | tee $(pt_toplevel).pt.avg.max.log; \
+	cd ..
+
+# PT Time Mode Report (Time mode uses .vcd)
+$(pt_time_max_rpt): $(OUT_DIR)/$(vcd_name).vcd $(pt_timestamp)
+	cp $(pt_time_tcl) $(pt_vars_tcl) $(pt_cur_build_dir)
+	echo -e '$(pt_vars)' > $(pt_makegen_tcl)
+	echo -e '$(pt_vars_time)' >> $(pt_makegen_tcl)
+	echo -e '$(pt_vars_max)' >> $(pt_makegen_tcl)
+	echo -e 'set ACTIVITY_FILE "$<";\n' >> $(pt_makegen_tcl)
+	echo -e 'set PT_EXEC "$(notdir $(patsubst %.vcd, %, $<))";\n' >> $(pt_makegen_tcl)
+# echo -e 'set PT_EXEC "$(notdir $(patsubst %.saif, %, $(vlsi_dir)/input-files/vcdplus.saif))";\n' >> $(pt_cur_build_dir)/$(pt_makegen_tcl)
+	cd $(pt_cur_build_dir); \
+	mkdir -p $(pt_results_dir); \
+	$(pt_exec) -f $(notdir $(pt_time_tcl)) | tee $(pt_toplevel).pt.time.max.log; \
+	cd ..
+
+#########################################################################################
+# Build Rules
+#########################################################################################
