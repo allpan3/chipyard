@@ -34,6 +34,7 @@ SIM_LDFLAGS = \
 	-ldramsim \
 	$(EXTRA_SIM_LDFLAGS)
 
+
 CLOCK_PERIOD ?= 1.0
 RESET_DELAY ?= 777.7
 
@@ -46,4 +47,6 @@ SIM_PREPROC_DEFINES = \
 	+define+RANDOMIZE_MEM_INIT \
 	+define+RANDOMIZE_REG_INIT \
 	+define+RANDOMIZE_GARBAGE_ASSIGN \
-	+define+RANDOMIZE_INVALID_ASSIGN
+	+define+RANDOMIZE_INVALID_ASSIGN \
+	+define+UNIT_DELAY
+# +define+no_warning
