@@ -60,4 +60,5 @@ class HwachaLargeBoomConfig extends Config(
 class HPURocketConfig extends Config(
   new hpu.DefaultHPUConfig ++
   new freechips.rocketchip.subsystem.WithNBigCores(1) ++
+  new chipyard.config.WithSystemBusWidth(128) ++
   new chipyard.config.AbstractConfig)
