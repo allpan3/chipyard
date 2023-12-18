@@ -6,12 +6,13 @@ TECH_CONF ?= tstech28.yml
 HAMMER_EXTRA_ARGS += -p $(vlsi_dir)/tstech28_sram_macros/sram_generator-output.json
 VLSI_MODEL_DUT_NAME = chiptop0
 
-EXTRA_SIM_SOURCES="${EXTRA_SIM_SOURCES} +define+UNIT_DELAY"
+EXTRA_SIM_SOURCES += +define+UNIT_DELAY
 
-SIM_PREPROC_DEFINES += "+define+UNIT_DELAY +define+no_warning"
+# SIM_PREPROC_DEFINES += "+define+UNIT_DELAY"
 
 CLOCK_PERIOD = 2.0
-USE_SRAM_COMPILER ?= 1
+USE_SRAM_COMPILER := 1
+USE_VPD := 1
 
 ifeq ($(design),hypernora)
     tech_name         ?= tstech28
@@ -19,7 +20,6 @@ ifeq ($(design),hypernora)
     # DESIGN_CONFS      ?= 
     TOP               ?= ChipTop
     # CUSTOM_VLOG       =
-    # TOP_MACROCOMPILER_MODE ?= -l $(SMEMS_CACHE) -hir $(SMEMS_HAMMER) 
 endif
 
 ifeq ($(design),hyper)
@@ -27,8 +27,6 @@ ifeq ($(design),hyper)
     CONFIG            ?= CustomHPUSoCConfig
     # DESIGN_CONFS      ?= 
     TOP               ?= ChipTop
-    # CUSTOM_VLOG       =
-    # TOP_MACROCOMPILER_MODE ?= -l $(SMEMS_CACHE) -hir $(SMEMS_HAMMER) 
 endif
 
 ifeq ($(design),gemmini)
@@ -37,10 +35,16 @@ ifeq ($(design),gemmini)
     TOP               ?= ChipTop
 endif
 
-
 ifeq ($(design),boom)
     tech_name         ?= tstech28
     CONFIG            ?= LargeBoomConfig
+    TOP               ?= ChipTop
+endif
+
+
+ifeq ($(design),rocket)
+    tech_name         ?= tstech28
+    CONFIG            ?= RocketConfig
     TOP               ?= ChipTop
 endif
 
