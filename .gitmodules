@@ -133,3 +133,5 @@
 [submodule "generators/hpu"]
 	path = generators/hpu
 	url = https://github.com/mohamed-s-ibrahim/HighFive.git
+[submodule "generators/hpu/"]
+	url = https://github.com/allpan3/Hyper.git
